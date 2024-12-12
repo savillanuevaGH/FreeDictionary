@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <title>FreeDictionary</title>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>
+                FreeDictionary
+            </h1>
+    
+            <form id="form" onsubmit="event.preventDefault(); document.getElementById('searchBtn').click()">
+                <input type="text" id="search" placeholder="Search a word...">
+                <button id="searchBtn">Search</button>
+            </form>
+        </header>
+
+        <section id="wordShow">
+            <article id="word"></article>
+        </section>
+    </div>
+</body>
+</html>
+
+<script type="module">
+    const btn = document.getElementById('searchBtn');
+    const wordEl = document.getElementById('word');
+    const wordShow = document.getElementById('wordShow');
+
+    
+    btn.addEventListener('click', async() => {
+        const word = document.getElementById('search').value;
+
+        try {
+            const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+            const data = await res.json();
+            
+            wordShow.style.display = 'block';
+            createWord(word, data);
+        } catch (error) {
+            wordShow.style.display = 'block';
+            wordEl.innerHTML = `<p>${error.message}</p>`;
+        }
+        fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`)
+            .then(res => res.json())
+            .then(data => {
+                wordShow.style.display = 'block';
+                createWord(word, data);
+            }); 
+    })
+
+    async function createWord(word, data) {
+        let audio = null;
+        let definition = null;
+        let phonetics = null;
+    
+        if (data[0]?.phonetics) {
+            phonetics = data[0].phonetics[0]?.text;
+            audio = new Audio(data[0].phonetics[0]?.audio);
+        }
+    
+        if (data[0]?.meanings) {
+            definition = data[0].meanings[0]?.definitions[0]?.definition;
+        }
+
+        wordEl.innerHTML = `
+            <div>
+                <h1>${word}</h1>
+                ${data[0]?.phonetics[1]?.text ? `<em>${data[0].phonetics[1].text}</em>` : ''}
+            </div>
+            ${definition ? `<p>${definition}</p>` : ''}
+            ${audio ? `<audio src="${audio.src}" controls></audio>` : ''}
+        `;
+    }
+</script>
+
+<style>
+    *, *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #f1f1f1;
+        height: 100vh;
+        background: linear-gradient(#333, #111) fixed;
+    }
+
+    .wrapper {
+        padding: 1rem 3rem;
+    }
+
+    header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    h1 {
+        font-size: 2em;
+        font-weight: 800;
+    }
+
+    form {
+        display: flex;
+    }
+
+    input {
+        padding: .5rem 1rem;
+        border: 1px solid #666;
+        border-radius: 1rem 0 0 1rem;
+        background: #f9f9f9;
+
+        &::placeholder {
+            color: #333;
+        }
+    }
+
+    button {
+        font-weight: 500;
+        padding: .5rem 1.2rem;
+        border: 1px solid #666;
+        border-radius: 0 1rem 1rem 0;
+        background: #f9f9f9;
+    }
+
+    section {
+        display: none;
+        margin-top: 2rem;
+        padding: 1rem 1.5rem;
+        border: 1px solid #666;
+        border-radius: 1rem;
+        background: #f9f9f9;
+        color: #333;
+    }
+
+    article {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+
+        div {
+            height: min-content;
+        }
+    }
+
+    audio {
+        width: 100%;
+    }
+
+    em {
+        font-weight: 400;
+    }
+
+    @media screen and (max-width: 768px) {
+        body {
+            font-size: xx-large;
+        }
+
+        .wrapper {
+            padding: 1rem 1.1rem;
+        }
+
+        input {
+            padding: 1rem 1.1rem;
+        }
+
+        section {
+            padding: 1rem 1.1rem;
+            font-size: .9em;
+        }
+    }
+
+    @media screen and (max-width: 1280px) {
+        body {
+            font-size: x-large;
+        }
+
+        .wrapper {
+            padding: 1rem 1.2rem;
+        }
+
+        form {
+            width: 50%;
+        }
+
+        input {
+            width: 90%;
+            padding: 1.2rem 1.8rem;
+
+            &::placeholder {
+                font-size: large;
+            }
+        }
+
+        section {
+            padding: 1rem 1.2rem;
+            font-size: .9em;
+        }
+
+        button {
+            font-size: large;
+        }
+    }  
+</style>
